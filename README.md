@@ -24,7 +24,7 @@ CSV Input file: WindowsEventLogMonitorQueryCriteria.csv in the same directory as
 - Delimiters
 	* LogName;ProviderName;Id;Level;minutesStartTime;minutesEndTime;MetricPath
 	* Semicolon (;) for field separator.
-	* Comma (.,) for ID and Level array separator.
+	* Comma (,) for ID and Level array separator.
 
 Note: Although the FilterHashtable filter allows an array for Log and Provider, this script limits them to single values.
 
@@ -48,4 +48,13 @@ Note: Although the FilterHashtable filter allows an array for Log and Provider, 
 
 ### Multiple Event IDs with Multiple Event Levels for the last 30 minutes ###
 "Windows PowerShell";"PowerShell";400,600;1,2,3,4;-30;0;Custom Metrics|WindowsEventLogMonitor|PowerShell_400_and_600|EventCount
+
+## Health Rule Example folder ## 
+JSON formatted files for a health rule definition and a violation.
+
+## generate_test_event folder ##
+PowerShell script to generate a test event with Write-EventLog.
+
+Example of a bad filter to create an error log message in the machine-agent.log to demonstrate what would be written if an event query is invalid.
+
 
