@@ -1,0 +1,23 @@
+[
+  {
+    "deepLinkUrl": "https://CONTROLLER_URL.saas.appdynamics.com/#location=APP_INCIDENT_DETAIL_MODAL&incident=904864&application=50",
+    "severity": "CRITICAL",
+    "triggeredEntityDefinition": {
+      "entityType": "POLICY",
+      "name": "Konieczka_EventLog_6008_HR",
+      "entityId": 8089
+    },
+    "startTimeInMillis": 1705948915000,
+    "detectedTimeInMillis": 0,
+    "endTimeInMillis": 1705949515000,
+    "name": "Konieczka_EventLog_6008_HR",
+    "description": "AppDynamics has detected a problem with Node <b>win19iissql<\/b>.<br><b>Konieczka_EventLog_6008_HR<\/b> continues to violate with <b>critical<\/b>.<br>All of the following conditions were found to be violating<br>For Node <b>win19iissql<\/b>:<br>1) Condition 1<br><b>EventCount's<\/b> value <b>11.00<\/b> was <b>greater than<\/b> the threshold <b>0.00<\/b> for the last <b>1<\/b> minutes.<br>",
+    "id": 904864,
+    "affectedEntityDefinition": {
+      "entityType": "APPLICATION_COMPONENT_NODE",
+      "name": "win19iissql",
+      "entityId": 539123
+    },
+    "incidentStatus": "RESOLVED"
+  }
+]

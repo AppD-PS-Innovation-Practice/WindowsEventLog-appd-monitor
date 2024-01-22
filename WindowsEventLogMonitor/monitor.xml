@@ -1,0 +1,24 @@
+<monitor>
+    <name>WindowsEventLogMonitor</name>
+       <type>managed</type>
+       <enabled>true</enabled>
+        <description>Monitors Windows Event Log events.</description>
+        <monitor-configuration>     
+        </monitor-configuration>
+    <monitor-run-task>
+           <execution-style>periodic</execution-style>
+           <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
+           <execution-timeout-in-secs>45</execution-timeout-in-secs> 
+        <name>Run</name>
+        <type>executable</type>
+        <task-arguments>
+            <argument name="option" default-value="-executionpolicy bypass"></argument>
+            <argument name="command" default-value="-Command"></argument>
+            <argument name="file_path" default-value="C:\\AppDynamics\\machineagent-bundle-64bit-windows-23.9.1.3731\\monitors\\WindowsEventLogMonitor\\WindowsEventLogMonitor.ps1"></argument>
+        </task-arguments>
+        <executable-task>
+            <type>command</type>
+            <command>C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe</command>
+        </executable-task>
+    </monitor-run-task>
+</monitor>

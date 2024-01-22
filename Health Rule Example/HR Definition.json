@@ -1,0 +1,45 @@
+{
+    "id": 8089,
+    "name": "Konieczka_EventLog_6008_HR",
+    "enabled": true,
+    "useDataFromLastNMinutes": 1,
+    "waitTimeAfterViolation": 1,
+    "scheduleName": "Always",
+    "affects": {
+        "affectedEntityType": "SERVERS",
+        "serverSelectionCriteria": {
+            "selectServersBy": "AFFECTED_SERVERS",
+            "affectedServers": {
+                "severSelectionScope": "ALL_SERVERS_IN_ACCOUNT"
+            }
+        }
+    },
+    "evalCriterias": {
+        "criticalCriteria": {
+            "conditionAggregationType": "ALL",
+            "conditionExpression": null,
+            "conditions": [
+                {
+                    "name": "Condition 1",
+                    "shortName": "A",
+                    "evaluateToTrueOnNoData": false,
+                    "violationStatusOnNoData": "UNKNOWN",
+                    "evalDetail": {
+                        "evalDetailType": "SINGLE_METRIC",
+                        "metricAggregateFunction": "VALUE",
+                        "metricPath": "Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount",
+                        "metricEvalDetail": {
+                            "metricEvalDetailType": "SPECIFIC_TYPE",
+                            "compareCondition": "GREATER_THAN_SPECIFIC_VALUE",
+                            "compareValue": 0
+                        }
+                    },
+                    "triggerEnabled": false,
+                    "minimumTriggers": 1
+                }
+            ],
+            "evalMatchingCriteria": null
+        },
+        "warningCriteria": null
+    }
+}

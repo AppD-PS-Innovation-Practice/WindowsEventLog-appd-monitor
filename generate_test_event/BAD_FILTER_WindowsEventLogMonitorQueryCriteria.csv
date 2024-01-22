@@ -1,0 +1,3 @@
+LogName;ProviderName;Id;Level;minutesStartTime;minutesEndTime;MetricPath
+"System";"Event Log";6008;2;-10;0;Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount
+"Application";".NET Runtime";1022;3;-60;ERROR_MUST_BE_INTEGER_ENUM_VALUE;Custom Metrics|WindowsEventLogMonitor|dotNET_Runtime_Invalid_Filter|EventCount

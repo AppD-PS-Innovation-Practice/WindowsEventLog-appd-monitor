@@ -1,0 +1,7 @@
+LogName;ProviderName;Id;Level;minutesStartTime;minutesEndTime;MetricPath
+"System";"Event Log";6008;2;-10;0;Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount
+"Windows PowerShell";"PowerShell";400;2;-240;0;Custom Metrics|WindowsEventLogMonitor|PowerShell_400|EventCount
+"Windows PowerShell";"PowerShell";600;2;-30;0;Custom Metrics|WindowsEventLogMonitor|PowerShell_600|EventCount
+"Application";".NET Runtime";1022;3;-60;4;Custom Metrics|WindowsEventLogMonitor|dotNET_Runtime_1022|EventCount
+"Application";".NET Runtime";1022;3;-60;4;Custom Metrics|WindowsEventLogMonitor|dotNET_Runtime_Invalid_Filter|EventCount
+"Windows PowerShell";"PowerShell";400,600;1,2,3,4;-30;0;Custom Metrics|WindowsEventLogMonitor|PowerShell_400_and_600|EventCount
