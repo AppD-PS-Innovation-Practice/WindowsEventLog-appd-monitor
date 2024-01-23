@@ -1,6 +1,6 @@
 {
     "id": 8089,
-    "name": "Konieczka_EventLog_6008_HR",
+    "name": "Windows_EventLog_6008_HR",
     "enabled": true,
     "useDataFromLastNMinutes": 1,
     "waitTimeAfterViolation": 1,
