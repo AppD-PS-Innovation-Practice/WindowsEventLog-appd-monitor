@@ -1,3 +1,9 @@
 LogName;ProviderName;Id;Level;minutesStartTime;minutesEndTime;MetricPath
-"System";"Event Log";6008;2;-10;0;Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount
-"Application";".NET Runtime";1022;3;-60;ERROR_MUST_BE_INTEGER_ENUM_VALUE;Custom Metrics|WindowsEventLogMonitor|dotNET_Runtime_Invalid_Filter|EventCount
+"Application";".NET Runtime";A;ABC;-60;10;dotNET_Runtime_Invalid_Id
+"Application";".NET Runtime";1022;ABC;-60;10;dotNET_Runtime_Invalid_Level
+"Application";".NET Runtime";1022;1;A;10;dotNET_Runtime_Invalid_Filter_time1
+"Application";".NET Runtime";1022;1;10;B;dotNET_Runtime_Invalid_Filter_time2
+"Application";".NET Runtime";1022;1;-10;-20;dotNET_Runtime_Invalid_Filter_time3
+"Application";".NET Runtime";1022;1;1;10;dotNET_Runtime_Invalid_Filter_time4
+"Joseph";"PowerShell";400,600;1,2,3,4;-30;0;Invalid_Log
+"System";"Joseph";400,600;1,2,3,4;-30;0;Invalid_Provider
