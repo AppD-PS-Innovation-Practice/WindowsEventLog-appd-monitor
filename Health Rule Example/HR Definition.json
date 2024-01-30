@@ -27,7 +27,7 @@
                     "evalDetail": {
                         "evalDetailType": "SINGLE_METRIC",
                         "metricAggregateFunction": "VALUE",
-                        "metricPath": "Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount",
+                        "metricPath": "Custom Metrics|WindowsEventLogMonitor|UnexpectedReboot_6008|Count",
                         "metricEvalDetail": {
                             "metricEvalDetailType": "SPECIFIC_TYPE",
                             "compareCondition": "GREATER_THAN_SPECIFIC_VALUE",
