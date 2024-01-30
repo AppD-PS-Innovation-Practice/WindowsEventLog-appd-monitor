@@ -93,7 +93,6 @@ param (
         'ID'
         'Time'
         'Query'
-        'Count'
     ),
     $statusCode = 0
 )
@@ -122,7 +121,7 @@ function Set-AppDMetricPath
 {
     param (
         $parentMetricPath = 'Custom Metrics|WindowsEventLogMonitor',
-        $metricPath = 'UnexpectedReboot_6008',
+        $metricPath = 'UnexpectedReboot_6008|Status',
         $extensionMetrics = @(
             'Log'
             'Provider'
@@ -130,7 +129,6 @@ function Set-AppDMetricPath
             'ID'
             'Time'
             'Query'
-            'Count'
         ),
         $statusCode = 0
     )
@@ -182,8 +180,12 @@ foreach ($query in $eventQueries)
     $minutesStartTime = $query.minutesStartTime
     $minutesEndTime = $query.minutesEndTime
     $metricPath = $query.MetricPath
+    $statusMetricPath = "$($metricPath)|Status"
+    $countMetricPath = "$($parentMetricPath)|$($metricPath)|Count"
+
+    $countMetricString = "name=$($countMetricPath),value=$($statusCode),aggregator=OBSERVATION"
     
-    $metricPathStringHashTable = Set-AppDMetricPath -parentMetricPath $parentMetricPath -metricPath $metricPath -extensionMetrics $extensionMetrics -statusCode $statusCode
+    $metricPathStringHashTable = Set-AppDMetricPath -parentMetricPath $parentMetricPath -metricPath $statusMetricPath -extensionMetrics $extensionMetrics -statusCode $statusCode
     [void]$extensionMetricsArrayList.Add($metricPathStringHashTable)
 
     try
@@ -331,7 +333,8 @@ foreach ($query in $eventQueries)
     $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", "value=$($eventQuery)"
     
     $itemType = 'Count'
-    $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", "value=$($eventCount)"
+    # $countMetricString
+    $metricPathStringHashTable[$itemType] = $countMetricString -replace "value=$($statusCode)", "value=$($eventCount)"
 
     
 }
