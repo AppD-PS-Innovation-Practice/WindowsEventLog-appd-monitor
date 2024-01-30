@@ -22,18 +22,12 @@ Since it uses Windows specific functions, PowerShell Core will not work.
 1. Download and unzip.
 2. Move the Health Rule Example and generate_test_event folders to a folder outside of `<MACHINE_AGENT_HOME>` as they are used for testing only.
 3. Copy ONLY the WindowsEventLogMonitor directory to `<MACHINE_AGENT_HOME>/monitors`.
+4. Validate that the WindowsEventLogMonitor.cmd batch file can run the WindowsEventLogMonitor.ps1 PowerShell script as expected from the command line.
 
 ## Configuration ##
 
-1. Update monitor.xml to point to the correct MACHINE_AGENT_HOME directory. Windows directory \ will need to be escaped with \\.
-
-<argument name="file_path" default-value="`<MACHINE_AGENT_HOME>\\monitors\\WindowsEventLogMonitor\\WindowsEventLogMonitor.ps1"></argument>
-
+1. Update monitor.xml execution properties as desired.
 2. Update WindowsEventLogMonitorQueryCriteria.csv with the desired event queries. The sample file includes several different examples.
-
-3. Update execution properties as desired.
-<execution-frequency-in-seconds>60</execution-frequency-in-seconds>
-<execution-timeout-in-secs>45</execution-timeout-in-secs> 
 
 ## Event Query Parameters ##
 
@@ -62,10 +56,29 @@ Note: Although the FilterHashtable filter allows an array for Log and Provider, 
 ## Query Examples ##
 
 ### Single Event ID with Single Event Level for the last 10 minutes ###
-"System";"Event Log";6008;2;-10;0;Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount
+"System";"Event Log";6008;2;-10;0;UnexpectedReboot_6008
 
 ### Multiple Event IDs with Multiple Event Levels for the last 30 minutes ###
-"Windows PowerShell";"PowerShell";400,600;1,2,3,4;-30;0;Custom Metrics|WindowsEventLogMonitor|PowerShell_400_and_600|EventCount
+"Windows PowerShell";"PowerShell";400,600;1,2,3,4;-30;0;PowerShell_400_and_600
+
+## Metrics ##
+
+The status of the extension is based upon the existence of the CSV file and the validity of each field.
+All of the metrics are initialized to 0. Once validated, it will be updated to 1.
+
+CSV File exists - only under Status branch
+Status|File
+
+For each query, these metrics will appear to ensure each query field is valid.
+QUERY_NAME|Log
+QUERY_NAME|Provider
+QUERY_NAME|Severity
+QUERY_NAME|ID
+QUERY_NAME|Time
+QUERY_NAME|Query
+
+Actual Count of the events returned by the query
+QUERY_NAME|Count
 
 ## Testing ##
 
@@ -81,10 +94,9 @@ JSON formatted files for a health rule definition and a violation.
 
 - PowerShell script to generate a test event with Write-EventLog.
 	* generate_test_windows_event.ps1
-	* Write-EventLog -LogName "System" -Source "Event Log" -EventID 6008 -EntryType ERROR -Message $message
 
 - Example of a bad filter to create an error log message in the machine-agent.log to demonstrate what would be written if an event query is invalid.
 	* BAD_FILTER_WindowsEventLogMonitorQueryCriteria.csv
-	* "Application";".NET Runtime";1022;3;-60;ERROR_MUST_BE_INTEGER_ENUM_VALUE;Custom Metrics|WindowsEventLogMonitor|dotNET_Runtime_Invalid_Filter|EventCount
+	
 
 
