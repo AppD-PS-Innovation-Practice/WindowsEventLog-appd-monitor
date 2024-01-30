@@ -17,6 +17,8 @@ Since it uses Windows specific functions, PowerShell Core will not work.
 
 <a href="https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.eventing.reader.standardeventlevel?view=dotnet-plat-ext-8.0">Event Level Mapping to Enumerated Integer Value</a>
 
+<a href="https://devblogs.microsoft.com/scripting/working-with-enums-in-powershell-5">Scripting Guy Blog: Get-EnumAndValues function</a>
+
 ## Installation ##
 
 1. Download and unzip.
