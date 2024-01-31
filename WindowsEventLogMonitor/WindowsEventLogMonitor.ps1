@@ -1,7 +1,8 @@
-#WindowsEventLogMonitor
+#WindowsEventLogMonitor Custom Extension
 
-# Microsoft Documentation References
 <#
+Microsoft Documentation References
+
 References for Get-WinEvent -FilterHashtable
 https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent?view=powershell-5.1
 https://learn.microsoft.com/en-us/powershell/scripting/samples/creating-get-winevent-queries-with-filterhashtable?view=powershell-5.1
@@ -38,10 +39,8 @@ $C = [System.Diagnostics.Eventing.Reader.StandardEventLevel]::Informational
 $Level=$C.Value__
 $Level
 
-#>
+Input validation logic
 
-#Input validation logic
-<#
 File Existence and then HashFilterTable fields
 Semicolon is field separator so that Id and Level can be comma separated arrays
 LogName;ProviderName;Id;Level;minutesStartTime;minutesEndTime;MetricPath
@@ -68,15 +67,21 @@ minutesEndTime is the end of the time window.
 If 0, then it is now.
 Otherwise, it must be a negative number
 
-Set metric path for all status parameters
-Status metrics are set using Unix style exit codes
-0 - OK
-1 - NOTOK
-Health Rule criteria can then be set for any value greater than 0
+Status is based on Bitwise value for each of the steps
 
-If Status fails, status is set to 1 and EventCount is -1.
+Bitwise Error Flags for Status
+
+File is a global validation which results in Terminal error with Throw
+Normally, you want to Test-Path $eventQueryCriteriaFile
+but try Import-Csv will generate Exception.
+This simplifies code block as if/else and try/catch can be collapsed to try/catch
+
+All other errors are per event query.
+If any queries fail, then the bit for that operation is set.
+If there are any errors, then each event query line will need to be checked.
+This decreases the number of reported metrics, load on system, and scaling.
+
 EventCount will be one of the following
--1: Query Failure
 0: No events found in timespan
 >0: Number of events in the timespan
 Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount
@@ -99,7 +104,6 @@ param (
 
 function Get-EnumValues
 {
-    # 
 
     param (
         [string]$enum
@@ -116,6 +120,8 @@ function Get-EnumValues
 
 <#
 Create a Hash Table for each query so that value can be updated in script
+Original approach where status was set for each query instance
+Replaced by bitwise flags
 #>
 function Set-AppDMetricPath
 {
@@ -144,32 +150,38 @@ function Set-AppDMetricPath
     $metricPathStringHashTable    
 }
 
-<#
-Normally, you want to Test-Path $eventQueryCriteriaFile
-but try Import-Csv will generate Exception.
-This simplifies code block as if/else and try/catch can be collapsed to try/catch
-#>
 
-try
+[flags()] enum EventQueryErrorFlags
 {
-    $itemType = 'File'
-    $eventQueries = Import-Csv $eventQueryCriteriaFile -Delimiter ';' -ErrorAction Stop
-    $metricString = "name=$($parentMetricPath)|Status|$($itemType),value=1,aggregator=OBSERVATION"
-    Write-Output $metricString    
-}
-catch
-{    
-    $metricString = "name=$($parentMetricPath)|Status|$($itemType),value=0,aggregator=OBSERVATION"
-    Write-Output "Error: $($Error[0].FullyQualifiedErrorId)"
-    Write-Output "Filename: $($eventQueryCriteriaFile)"
-    exit
+    OK = 0
+    File = 1
+    Log = 2
+    Provider = 4
+    SeverityLevel = 8
+    EventID = 16
+    TimeSpan = 32
+    Query = 64
 }
 
 $enumHashTable = Get-EnumValues -enum 'System.Diagnostics.Eventing.Reader.StandardEventLevel'
 $severityLevels = $enumHashTable.Values
+$queryErrorFlags = 0
 
-# Array for all of the Metric Strings
-[System.Collections.ArrayList]$extensionMetricsArrayList = @()
+try
+{
+    $eventQueries = Import-Csv $eventQueryCriteriaFile -Delimiter ';' -ErrorAction Stop
+}
+catch
+{    
+    # Write-Output "Error: $($Error[0].FullyQualifiedErrorId)"
+    # Write-Output "Filename: $($eventQueryCriteriaFile)"
+    # If File can't be read, then no other metrics can be set this run
+
+    $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::File
+    $queryErrorStatus = "name=$($parentMetricPath)|Status,value=$($queryErrorFlags),aggregator=OBSERVATION"    
+    Write-Output $queryErrorStatus
+    exit
+}
 
 foreach ($query in $eventQueries)
 {
@@ -180,109 +192,97 @@ foreach ($query in $eventQueries)
     $minutesStartTime = $query.minutesStartTime
     $minutesEndTime = $query.minutesEndTime
     $metricPath = $query.MetricPath
-    $statusMetricPath = "$($metricPath)|Status"
     $countMetricPath = "$($parentMetricPath)|$($metricPath)|Count"
-
-    $countMetricString = "name=$($countMetricPath),value=$($statusCode),aggregator=OBSERVATION"
-    
-    $metricPathStringHashTable = Set-AppDMetricPath -parentMetricPath $parentMetricPath -metricPath $statusMetricPath -extensionMetrics $extensionMetrics -statusCode $statusCode
-    [void]$extensionMetricsArrayList.Add($metricPathStringHashTable)
+    $eventCount = 0
 
     try
     {
         $logDetails = (Get-WinEvent -ListLog $LogName -ErrorAction Stop)
-        if ($logDetails)
-        {
-            $itemType = 'Log'
-            $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", 'value=1'
-
-            $providerDetails = $logDetails `
-            | Where-Object {
-                $_.ProviderNames -contains $ProviderName
-            }
-            if ($providerDetails)
-            {
-                $itemType = 'Provider'
-                $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", "value=1"
-            }
-            else
-            {
-                # "$ProviderName not found for $LogName"
-                continue
-            }
+        $providerDetails = $logDetails `
+        | Where-Object {
+            $_.ProviderNames -contains $ProviderName
         }
-    }
-    catch
-    {
-        # "$LogName not found"
-        continue
-    }
-    
-    if ($Level | Where-Object { $_ -in $severityLevels })
-    {
-        $itemType = 'Severity'
-        $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", 'value=1'      
-    }
-    else
-    {
-        ##Throw "$Level is not a valid integer array in StandardEventLevel enumeration list."
-        continue
-    }
-    
-    <#
-    If any eventId isn't integer, then need to immediately continue to next event
-    -split creates a string array so need to check each Id and cast to [int]
-    Reset statusCode for events as it will be decremented for each invalid ID
-    #>
-    
-    # Need to copy original statusCode to iterate over event IDs
-    $eventStatusCode = $statusCode
-
-    #
-    foreach ($eventId in $Id)
-    {
-        try
+        if (!$providerDetails)
         {
-            [int]$eventId | Out-Null
-            
-        }
-        catch
-        {
-            $eventStatusCode--
-        }
-    }
-    
-    if ($eventStatusCode -eq $statusCode)
-    {    
-        $itemType = 'ID'
-        $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", "value=1"
-    }
-    else
-    {
-        #Throw "$eventId is not a valid integer array."
-        continue
-    }
-
-    try
-    {
-        $minutesStartTime = [int]$minutesStartTime
-        $minutesEndTime = [int]$minutesEndTime
-        if ((($minutesStartTime -lt 0) `
-                    -and ($minutesStartTime -lt $minutesEndTime)) `
-                -and ($minutesEndTime -le 0))
-        {
-            $itemType = 'Time'
-            $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", "value=1"
-        }
-        else
-        {
-            #Throw 'Invalid Timespan - start must be before end'
+            # "$ProviderName not found for $LogName"
+            $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::Provider
+            $countMetricString = "name=$($countMetricPath),value=$($eventCount),aggregator=OBSERVATION"
+            Write-Output $countMetricString
             continue
         }
     }
     catch
     {
-        #Throw 'Invalid Timespan - minutes must be integers'
+        # "$LogName not found"
+        $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::Log
+        $countMetricString = "name=$($countMetricPath),value=$($eventCount),aggregator=OBSERVATION"
+        Write-Output $countMetricString
+        continue
+    }
+    
+    if (!($Level | Where-Object { $_ -in $severityLevels }))
+    {
+        ## "$Level is not a valid integer array in StandardEventLevel enumeration list."
+        $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::SeverityLevel
+        $countMetricString = "name=$($countMetricPath),value=$($eventCount),aggregator=OBSERVATION"
+        Write-Output $countMetricString
+        continue
+    }
+    
+    <#
+    -split creates a string array so need to check each Id and cast to [int]
+    If any eventId isn't integer, then need to immediately continue to next event
+    break will exit out of this internal loop
+    Need a second variable to break out of outer loop
+    #>
+
+    $invalidId = 0
+    foreach ($eventId in $Id)
+    {
+        try
+        {
+            [int]$eventId | Out-Null            
+        }
+        catch
+        {
+            # "$eventId is not a valid integer."
+            $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::EventID
+            $countMetricString = "name=$($countMetricPath),value=$($eventCount),aggregator=OBSERVATION"
+            Write-Output $countMetricString
+            $invalidId = 1
+            break
+        }
+    }
+
+    if ($invalidId) {
+        continue
+    }
+    
+    try
+    {
+        $minutesStartTime = [int]$minutesStartTime
+        $minutesEndTime = [int]$minutesEndTime
+        if (($minutesStartTime -lt 0) `
+                -and ($minutesStartTime -lt $minutesEndTime) `
+                -and ($minutesEndTime -le 0))
+        {
+            # Valid TimeSpan
+        }
+        else
+        {
+            # 'Invalid Timespan - start must be before end'
+            $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::TimeSpan
+            $countMetricString = "name=$($countMetricPath),value=$($eventCount),aggregator=OBSERVATION"
+            Write-Output $countMetricString
+            continue
+        }
+    }
+    catch
+    {
+        # 'Invalid Timespan - minutes must be integers'
+        $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::TimeSpan
+        $countMetricString = "name=$($countMetricPath),value=$($eventCount),aggregator=OBSERVATION"
+        Write-Output $countMetricString
         continue
     }
 
@@ -299,7 +299,7 @@ foreach ($query in $eventQueries)
         EndTime      = $EndTime
     }
     
-    #$filterHash
+    # $filterHash
     <#
         Need try/catch to prevent Non-Terminating error from writing to I/O stream
         If no events are found, then it throws an Exception
@@ -311,33 +311,29 @@ foreach ($query in $eventQueries)
     {
         $filteredEvents = Get-WinEvent -FilterHashtable $filterHash -ErrorAction Stop #-Verbose
         $eventCount = $filteredEvents.Count
-        $eventQuery = 1
     }
-
     catch #[System.Management.Automation.MethodException]
     {
         if ($_.Exception -match 'No events were found that match the specified selection criteria')
         {
             $eventCount = 0
-            $eventQuery = 1
         }
         else
         {
             # Write-Output 'Invalid Query'
-            $eventQuery = 0
             $eventCount = 0
+            $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::Query
         }
     }
-
-    $itemType = 'Query'
-    $metricPathStringHashTable[$itemType] = $metricPathStringHashTable[$itemType] -replace "value=$($statusCode)", "value=$($eventQuery)"
-    
-    $itemType = 'Count'
-    # $countMetricString
-    $metricPathStringHashTable[$itemType] = $countMetricString -replace "value=$($statusCode)", "value=$($eventCount)"
-
-    
+    finally 
+    {
+        # Always set count after the try block regardless of whether an exception occurred or not
+        $countMetricString = "name=$($countMetricPath),value=$($eventCount),aggregator=OBSERVATION"
+        Write-Output $countMetricString
+    }
 }
 
-Write-Output  $extensionMetricsArrayList.Values
+$queryErrorStatus = "name=$($parentMetricPath)|Status,value=$($queryErrorFlags),aggregator=OBSERVATION"
+Write-Output $queryErrorStatus
+
 'End for debugging' | Out-Null
