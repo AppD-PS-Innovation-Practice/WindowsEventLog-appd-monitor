@@ -65,22 +65,30 @@ Note: Although the FilterHashtable filter allows an array for Log and Provider, 
 
 ## Metrics ##
 
-The status of the extension is based upon the existence of the CSV file and the validity of each field.
-All of the metrics are initialized to 0. Once validated, it will be updated to 1.
+### Status ###
+The status of the extension is based upon the existence of the CSV file and the validity of each field. Status is based on Bitwise value for each of the steps.
 
-CSV File exists - only under Status branch
-Status|File
+Bitwise Error Flags for Status.
 
-For each query, these metrics will appear to ensure each query field is valid.
-QUERY_NAME|Log
-QUERY_NAME|Provider
-QUERY_NAME|Severity
-QUERY_NAME|ID
-QUERY_NAME|Time
-QUERY_NAME|Query
+EventQueryErrorFlags
 
-Actual Count of the events returned by the query
-QUERY_NAME|Count
+- OK = 0
+- File = 1
+- Log = 2
+- Provider = 4
+- SeverityLevel = 8
+- EventID = 16
+- TimeSpan = 32
+- Query = 64
+
+
+### Count ###
+QUERY_NAME|Count represents the actual number of events found.
+If will either be an integer greater than or equal to 0.
+For the count of the events found, 0 represents No events found.
+If the event query fails, the bitwise flag value of 64 will be added, but the eventcount will remain as 0.
+
+
 
 ## Testing ##
 
