@@ -3,7 +3,7 @@ param (
     $demoTime = (Get-Date).AddMinutes($minutesBack),
     $message = "The previous system shutdown at $($demoTime) was unexpected.",
     $LogName = 'System',
-    $Source = 'Event Log',
+    $Source = 'EventLog',
     $ID = 6008,
     $EntryType = 'ERROR',
     $minutesStartTime = -2,
