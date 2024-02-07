@@ -118,38 +118,6 @@ function Get-EnumValues
     $enumValues
 }
 
-<#
-Create a Hash Table for each query so that value can be updated in script
-Original approach where status was set for each query instance
-Replaced by bitwise flags
-#>
-function Set-AppDMetricPath
-{
-    param (
-        $parentMetricPath = 'Custom Metrics|WindowsEventLogMonitor',
-        $metricPath = 'UnexpectedReboot_6008|Status',
-        $extensionMetrics = @(
-            'Log'
-            'Provider'
-            'Severity'
-            'ID'
-            'Time'
-            'Query'
-        ),
-        $statusCode = 0
-    )
-
-    $metricPathStringHashTable = @{}
-
-    foreach ($extensionMetric in $extensionMetrics)
-    {
-        $metricString = "name=$($parentMetricPath)|$($metricPath)|$($extensionMetric),value=$($statusCode),aggregator=OBSERVATION"
-        $metricPathStringHashTable[$extensionMetric] = $metricString
-    }
-
-    $metricPathStringHashTable    
-}
-
 
 [flags()] enum EventQueryErrorFlags
 {
@@ -192,6 +160,16 @@ foreach ($query in $eventQueries)
     $minutesStartTime = $query.minutesStartTime
     $minutesEndTime = $query.minutesEndTime
     $metricPath = $query.MetricPath
+
+    <#
+    Check to ensure that all fields have been populated.
+    If there aren't enough Import-Csv will still work but field will be empty
+    #>
+    if (!$metricPath) {
+        $queryErrorFlags = $queryErrorFlags -bor [EventQueryErrorFlags]::File
+        continue
+    }
+
     $countMetricPath = "$($parentMetricPath)|$($metricPath)|Count"
     $eventCount = 0
 
@@ -333,7 +311,15 @@ foreach ($query in $eventQueries)
     }
 }
 
+#  [EventQueryErrorFlags]$queryErrorFlags
 $queryErrorStatus = "name=$($parentMetricPath)|Status,value=$($queryErrorFlags),aggregator=OBSERVATION"
 Write-Output $queryErrorStatus
 
-'End for debugging' | Out-Null
+# 'End for debugging to place breakpoint' | Out-Null
+
+# To check that the EventQueryErrorFlags are set correctly, uncomment the below line
+
+# [EventQueryErrorFlags]$queryErrorFlags
+
+
+
