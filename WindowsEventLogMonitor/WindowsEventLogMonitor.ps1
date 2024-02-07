@@ -84,7 +84,7 @@ This decreases the number of reported metrics, load on system, and scaling.
 EventCount will be one of the following
 0: No events found in timespan
 >0: Number of events in the timespan
-Custom Metrics|WindowsEventLogMonitor|UnexpectedShutdown_6008|EventCount
+Custom Metrics|WindowsEventLogMonitor|UnexpectedReboot_6008|EventCount
 #>
 
 param (
