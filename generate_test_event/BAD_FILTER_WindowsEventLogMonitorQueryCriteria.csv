@@ -1,5 +1,5 @@
 LogName;ProviderName;Id;Level;minutesStartTime;minutesEndTime;MetricPath
-"Application";".NET Runtime";A;ABC;-60;10;dotNET_Runtime_Invalid_Id
+"Application";".NET Runtime";A;2;-60;10;dotNET_Runtime_Invalid_Id
 "Application";".NET Runtime";1022;ABC;-60;10;dotNET_Runtime_Invalid_Level
 "Application";".NET Runtime";1022;1;A;10;dotNET_Runtime_Invalid_Filter_time1
 "Application";".NET Runtime";1022;1;10;B;dotNET_Runtime_Invalid_Filter_time2
