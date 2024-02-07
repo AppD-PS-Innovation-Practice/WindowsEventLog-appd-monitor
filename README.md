@@ -6,8 +6,9 @@ This extension monitors the number of times that a Windows Event Log event has o
 
 ## Prerequisites ##
 
-Windows PowerShell 5.1 or later is required. It is installed by default on all current versions of Windows clients and servers.
-Since it uses Windows specific functions, PowerShell Core will not work.
+- Windows PowerShell 5.1 is required.
+- It is installed by default on all current versions of Windows clients and servers.
+- Since the script uses Windows only specific functions, PowerShell Core will not work.
 
 ## Microsoft Documentation for Get-WinEvent ##
 
@@ -30,6 +31,8 @@ Since it uses Windows specific functions, PowerShell Core will not work.
 
 1. Update monitor.xml execution properties as desired.
 2. Update WindowsEventLogMonitorQueryCriteria.csv with the desired event queries. The sample file includes several different examples.
+3. Please review the entries for the queries, especially the LogName and ProviderName to ensure that they match exactly. Some will have spaces and others will not.
+4. When generating test events to mimic actual events, the parameters should match the field values in the WindowsEventLogMonitorQueryCriteria.csv file.
 
 ## Event Query Parameters ##
 
@@ -51,24 +54,23 @@ Note: Although the FilterHashtable filter allows an array for Log and Provider, 
 	* Event severity Levels
 	
 - Time Window - DateTime
-	* StartTime - Negative number representing the number of minutes prior to script execution
+	* StartTime - Negative number representing the number of minutes prior to script execution.
 	* EndTime - Negative number or 0 (zero) to represent the current time (now).
 
 
 ## Query Examples ##
 
-### Single Event ID with Single Event Level for the last 10 minutes ###
-"System";"Event Log";6008;2;-10;0;UnexpectedReboot_6008
+### Single Event ID with Single Event Level for the last 10 minutes - LogName and ProviderName without spaces ###
+"System";"EventLog";6008;2;-10;0;UnexpectedReboot_6008
 
-### Multiple Event IDs with Multiple Event Levels for the last 30 minutes ###
+### Multiple Event IDs with Multiple Event Levels for the last 30 minutes - LogName includes spaces ###
 "Windows PowerShell";"PowerShell";400,600;1,2,3,4;-30;0;PowerShell_400_and_600
 
 ## Metrics ##
 
 ### Status ###
-The status of the extension is based upon the existence of the CSV file and the validity of each field. Status is based on Bitwise value for each of the steps.
-
-Bitwise Error Flags for Status.
+The status of the extension is based upon the existence of the CSV file and the validity of each field.
+Status is based on Bitwise value for each of the steps.
 
 EventQueryErrorFlags
 
@@ -83,10 +85,10 @@ EventQueryErrorFlags
 
 
 ### Count ###
-QUERY_NAME|Count represents the actual number of events found.
-If will either be an integer greater than or equal to 0.
-For the count of the events found, 0 represents No events found.
-If the event query fails, the bitwise flag value of 64 will be added, but the eventcount will remain as 0.
+- QUERY_NAME | Count represents the actual number of events found.
+- It will either be an integer greater than or equal to 0.
+- For the count of the events found, 0 represents No events found.
+- If the event query fails, the bitwise flag value of 64 will be added, but the eventcount will remain as 0.
 
 
 
@@ -96,8 +98,7 @@ If the event query fails, the bitwise flag value of 64 will be added, but the ev
 JSON formatted files for a health rule definition and a violation.
 
 - HR Definition.json
-
-- HR Violation.JSON
+- HR Violation.json
 
 
 ### generate_test_event folder ###
